@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+
+var program = require('commander')
+var logger = require('../lib/logger')
+var request = require('request')
+var chalk = require('chalk')
+var config = require('../lib/config')
+var tplUtil = require('../lib/tpl-util')
+
+/**
+ * Usage.
+ */
+program
+  .usage('[owner] [project-name]')
+  .option('--debug', 'log debug info')
+
+program.parse(process.argv)
+config.update({
+  debug: program.debug
+})
+
+/**
+ * Padding.
+ */
+
+console.log()
+process.on('exit', function () {
+  console.log()
+})
+
+/**
+ * List repos.
+ */
+
+var owner = program.args[0]
+var project = program.args[1]
+var url = tplUtil.parseRepoUrl(owner, project)
+if(config.debug) {
+  logger.debug('list:', url)
+  console.log()
+}
+
+request({
+  url: url,
+  headers: config.requestConfig.headers
+}, function (err, res, body) {
+  if (err) logger.fatal(err)
+  var requestBody = JSON.parse(body)
+  if (Array.isArray(requestBody)) {
+    console.log('Available official templates:')
+    console.log()
+    requestBody.forEach(function (repo) {
+      console.log(
+        '  ' + chalk.yellow('★') +
+        '  ' + chalk.blue(repo.name) +
+        ' - ' + repo.description)
+    })
+  } else {
+    console.error(requestBody.message)
+  }
+})
+
