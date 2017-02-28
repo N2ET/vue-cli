@@ -1,62 +1,94 @@
 #!/usr/bin/env node
 
+var path = require('path')
 var program = require('commander')
 var logger = require('../lib/logger')
 var request = require('request')
 var chalk = require('chalk')
+var async = require('async')
+var metalsmith = require('metalsmith')
+
 var config = require('../lib/config')
 var tplUtil = require('../lib/tpl-util')
-
+var evaluate = require('../lib/eval')
 /**
  * Usage.
  */
 program
-  .usage('[owner] [project-name]')
+  .usage('[owner] [template-name]')
   .option('--debug', 'log debug info')
 
 program.parse(process.argv)
-config.update({
-  debug: program.debug
-})
+tplUtil.updateConfig(program)
 
-/**
- * Padding.
- */
 
 console.log()
 process.on('exit', function () {
   console.log()
 })
 
-/**
- * List repos.
- */
-
-var owner = program.args[0]
-var project = program.args[1]
-var url = tplUtil.parseRepoUrl(owner, project)
-if(config.debug) {
-  logger.debug('list:', url)
-  console.log()
+if(!program.args.length) {
+  listAllTopProjects()
+  return
 }
 
-request({
-  url: url,
-  headers: config.requestConfig.headers
-}, function (err, res, body) {
-  if (err) logger.fatal(err)
-  var requestBody = JSON.parse(body)
-  if (Array.isArray(requestBody)) {
-    console.log('Available official templates:')
-    console.log()
-    requestBody.forEach(function (repo) {
-      console.log(
-        '  ' + chalk.yellow('★') +
-        '  ' + chalk.blue(repo.name) +
-        ' - ' + repo.description)
-    })
-  } else {
-    console.error(requestBody.message)
-  }
-})
+listAllTemplates();
 
+
+function listAllTemplates() {
+  logger.debug('listAllTemplates fullTemplatePath: ', config.fullTemplatePath)
+
+  metalsmith(config.fullTemplatePath)
+    .use(function (files, metalsmith, done) {
+      var metaData
+      Object.keys(files).forEach(function (file) {
+        if (file.match(/meta\.(js|json)$/)) {
+          logger.debug('match: ', file)
+
+          // perf!
+          try {
+            metaData = require(
+              path.join(config.fullTemplatePath, file)
+            )
+            logger.debug(metaData)
+            console.log(metaData.templateName || metaData.name || file)
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      });
+      done()
+    })
+    .source('.')
+    .process(function(err, files) {
+        if(err) {
+          console.error(err);
+        }
+    })
+
+}
+
+
+function listAllTopProjects() {
+  var url = tplUtil.getListUrl();
+  logger.debug('listAllTopProjects url: ', url);
+  request({
+    url: url,
+    headers: config.requestConfig.headers
+  }, function (err, res, body) {
+    if (err) logger.fatal(err)
+    var requestBody = JSON.parse(body)
+    if (Array.isArray(requestBody)) {
+      console.log('Available template set:')
+      console.log()
+      requestBody.forEach(function (repo) {
+        console.log(
+          '  ' + chalk.yellow('★') +
+          '  ' + chalk.blue(repo.name) +
+          ' - ' + repo.description)
+      })
+    } else {
+      console.error(requestBody.message)
+    }
+  })
+}

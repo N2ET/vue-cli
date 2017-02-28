@@ -1,0 +1,28 @@
+var program = require('commander')
+var logger = require('../lib/logger')
+var config = require('../lib/config')
+var tplUtil = require('../lib/tpl-util')
+
+program
+  .usage('[owner] [project-name]')
+  .option('--debug', 'log debug info')
+
+program.parse(process.argv)
+config.update({
+  debug: program.debug
+})
+
+console.log()
+process.on('exit', function () {
+  console.log()
+})
+
+tplUtil.updateConfig(program)
+tplUtil.downloadTemplate(null)
+
+
+
+
+
+
+
