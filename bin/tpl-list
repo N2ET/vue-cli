@@ -7,6 +7,7 @@ var request = require('request')
 var chalk = require('chalk')
 var async = require('async')
 var metalsmith = require('metalsmith')
+var chalk = require('chalk')
 
 var config = require('../lib/config')
 var tplUtil = require('../lib/tpl-util')
@@ -36,7 +37,12 @@ listAllTemplates();
 
 
 function listAllTemplates() {
+  var repo = config.repo
   logger.debug('listAllTemplates fullTemplatePath: ', config.fullTemplatePath)
+  console.log(
+    '  ' + chalk.yellow('★') +
+    '  ' + chalk.blue(repo.project)
+  )
 
   metalsmith(config.fullTemplatePath)
     .use(function (files, metalsmith, done) {
@@ -51,7 +57,12 @@ function listAllTemplates() {
               path.join(config.fullTemplatePath, file)
             )
             logger.debug(metaData)
-            console.log(metaData.templateName || metaData.name || file)
+            console.log(
+              '   ',
+              metaData.templateName || metaData.name || '[no name]',
+              '-',
+              file
+            )
           } catch (e) {
             console.error(e)
           }
