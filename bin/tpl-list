@@ -59,9 +59,9 @@ function listAllTemplates() {
             logger.debug(metaData)
             console.log(
               '   ',
-              metaData.templateName || metaData.name || '[no name]',
+              metaData.name || '[no name]',
               '-',
-              file
+              tplUtil.filePathToTemplate(file)
             )
           } catch (e) {
             console.error(e)

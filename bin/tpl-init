@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+var program = require('commander')
+var path = require('path')
+var logger = require('../lib/logger')
+var generate = require('../lib/tpl-generate')
+
+
+var warnings = require('../lib/warnings')
+var { isLocalPath, getTemplatePath } = require('../lib/local-path')
+
+var tplUtil = require('../lib/tpl-util')
+var config = require('../lib/config')
+
+program
+  .usage('[owner] <template-name> [dest]')
+  .option('-c, --clone', 'use git clone')
+  .option('--debug', 'log debug info')
+
+
+program.on('--help', function () {
+  console.log('  Examples:')
+  console.log()
+  console.log(chalk.gray('    # create a new project with an official template'))
+  console.log('    $ vue init webpack my-project')
+  console.log()
+  console.log(chalk.gray('    # create a new project straight from a github template'))
+  console.log('    $ vue init username/repo my-project')
+  console.log()
+})
+
+function help () {
+  program.parse(process.argv)
+  if (program.args.length < 1) return program.help()
+}
+help()
+
+console.log()
+process.on('exit', function () {
+  console.log()
+})
+
+generate(
+  null,
+  config.fullTemplatePath,
+  config.templateDestDir,
+  function() {
+
+  }
+)
+
+
+
