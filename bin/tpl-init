@@ -13,7 +13,7 @@ var tplUtil = require('../lib/tpl-util')
 var config = require('../lib/config')
 
 program
-  .usage('[owner] <template-name> [dest]')
+  .usage('[owner] <template-name>')
   .option('-c, --clone', 'use git clone')
   .option('--debug', 'log debug info')
 
@@ -39,6 +39,8 @@ console.log()
 process.on('exit', function () {
   console.log()
 })
+
+tplUtil.updateConfig(program)
 
 generate(
   null,
